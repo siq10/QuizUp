@@ -1,0 +1,280 @@
+@import "variables";
+:root{
+  font-size: 16px;
+}
+
+/* apply a natural box layout model to all elements, but allowing components to change */
+html {
+  box-sizing: border-box;
+}
+*, *:before, *:after {
+  box-sizing: inherit;
+}
+
+body {
+  font-family: 'Avenir', Helvetica, Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  color: #f8f7f7;
+  background-image: url("3.jpg");
+  margin: 0;
+  line-height: 1.5;
+  overflow: hidden;
+}
+
+/**
+* Style the header
+ */
+header {
+  background-color: $primary;
+  color: $white;
+  font-size: 2rem;
+  padding: 1rem 0;
+  text-align: center;
+  text-shadow: 0 2px 1px transparentize($dark-grey, .5);
+  border-top: 5px solid $dark-primary;
+  border-bottom: 1px solid $dark-primary;
+  //margin-bottom: 2rem; schimbat!!
+  box-shadow: 0 0 5px transparentize($dark-grey, .3);
+  width:100vw;
+}
+.body-wrapper {
+  margin: 0 1rem 1rem 1rem;
+  padding-top:10rem;
+  position: relative;
+  min-height: 90%;
+}
+#appname{
+  font-size:2rem;
+  font-weight: 600;
+  margin: 5px;
+  padding:0;
+}
+
+/**
+* Leave the margin on the headers and paragraphs on the bottom
+ */
+h1, h2, h3, h4, h5, h6, p{ margin: 0 0 1em}
+
+/**
+* Styling for buttons
+ */
+button:not(#notificationbutton) , a.button {
+  display: inline-block;
+  background: $primary;
+  border: none;
+  border-top: 1px solid $light-primary;
+  border-bottom: 3px solid $dark-primary;
+  border-radius: 5px;
+  color: $white;
+  text-decoration: none;
+  padding: .75rem 2rem;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all .2s linear;
+  text-shadow: 0 1px 1px $dark-grey;
+  &:hover{
+    background: darken($primary, 3%);
+    transform: translateY(-1px);
+  }
+  &:active{
+    background: darken($primary, 10%);
+    box-shadow: inset 0 3px 5px transparentize($dark-grey, .5);
+    transform: translateY(1px);
+  }
+  &:disabled{
+    background: $light-grey;
+    border-top: 1px solid $light-grey;
+    border-bottom: 3px solid transparent;
+    box-shadow: inset 0 3px 5px transparentize($dark-grey, .5);
+  }
+}
+  .allbtn {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding-top:1rem;
+    }
+    .btn {
+      margin:1rem;
+      width:60%;
+    }
+
+
+/**
+* A card container
+ */
+.card{
+  text-align: center;
+  border-radius: 10px;
+  background: transparentize($white, .25);
+  border: 1px solid $white;
+  box-shadow: 0 3px 10px transparentize($dark-grey, .75);
+  max-width: 90%;
+  color:black;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+
+/**
+*Problem styling
+*/
+.problem{
+  border-radius: 10px;
+  background: transparentize($white, .25);
+  border: 1px solid $white;
+  box-shadow: 0 3px 10px transparentize($dark-grey, .75);
+  max-width: 90%;
+  margin: 0 auto;
+  padding: 2rem;
+  color:black;
+
+
+}
+  .answers:hover{
+    background: darken($white, 10%);
+}
+  .answers:hover::before{
+    transform:scaleX(1);
+  }
+  .answers::before{
+    content:"";
+    width:3%;
+    margin:0;
+    background:black;
+    height:0.3rem;
+    transition: transform 0.5s ease;
+    position:absolute;
+    border:black;
+    transform:scaleX(0);
+    top:1.3rem;
+
+  }
+  .active{
+    transform: scaleX(1);
+  }
+  .answers{
+    margin-left:2%;
+    min-height:4rem;
+    cursor:pointer;
+    width:90%;
+    position:relative;
+    padding-left:5%;
+  }
+
+  .marg{
+    margin-left:15%;
+    width:70%;
+  }
+
+
+
+table {
+  width: 100%;
+}
+td, th {
+  border: 1px solid #dddddd;
+  text-align: left;
+  padding: 8px;
+}
+
+/**
+* A table container
+ */
+.tablecontainer{
+  border-radius: 10px;
+  background: transparentize($white, .25);
+  border: 1px solid $white;
+  box-shadow: 0 3px 10px transparentize($dark-grey, .75);
+  max-width: 90%;
+  margin: 5rem auto 2rem;
+  color:black;
+  padding: 2rem;
+}
+  .tbl{
+  border-collapse:collapse;
+  width:90%;
+  margin-left:4%;
+  }
+
+.tablelead{
+  cursor:pointer;
+  font-weight:800;
+  border-bottom:1px solid black;
+}
+.tabletail{
+  border-bottom:1px solid black;
+}
+.tmargin{
+background-color:transparentize($white, .75);
+}
+
+
+@import "forms";
+
+/**
+* Loading dots styling
+**/
+div#wave {
+  position:relative;
+  text-align:center;
+  width:100px;
+  height:100px;
+  margin:0 auto;
+  .dot {
+    display:inline-block;
+    width:14px;
+    height:14px;
+    border-radius:50%;
+    margin-right:3px;
+    background:#303131;
+    animation: wave 1.3s linear infinite;
+
+    &:nth-child(2) {
+      animation-delay: -1.1s;
+    }
+
+    &:nth-child(3) {
+      animation-delay: -0.9s;
+    }
+  }
+}
+
+.faderelative-enter-active, .faderelative-leave-active {
+  transition: opacity .5s;
+  width: 100%;
+}
+.faderelative-enter, .faderelative-leave-to{
+  opacity: 0
+}
+
+@keyframes wave {
+  0%, 60%, 100% {
+    transform: initial;
+  }
+
+  30% {
+    transform: translateY(-15px);
+  }
+}
+
+#trapezoid {
+  border-top: 55px solid $secondary;
+  border-left: 30px solid transparent;
+  border-right: 30px solid transparent;
+  width:80%;
+  height:0;
+  margin:0 auto;
+}
+
+@media only screen and (max-width:1053px) {
+  .card{
+    margin:0;
+    max-width:100%;
+  }
+  .body-wrapper{
+    padding-top: 8rem;
+  }
+}

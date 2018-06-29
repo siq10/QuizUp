@@ -1,0 +1,31 @@
+@import "variables";
+
+form{
+  background: darken($white, 2%);
+  border: 1px solid $light-grey;
+  padding: 1rem;
+  text-align: center;
+  label{
+    display: block;
+    font-style: italic;
+  }
+  input {
+    margin-bottom: 1rem;
+    padding: .5rem;
+    background: #fff;
+    width: 100%;
+    max-width: 300px;
+  }
+  button, input[type="submit"] {
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+  }
+}
+
+.form-error {
+  background-color: $accent;
+  color: $white;
+  padding: 1rem;
+  margin: 1rem;
+}
