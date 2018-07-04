@@ -2,7 +2,7 @@
   <div id="app">
     <header class="hder">
       <div class="headerflex">
-        <h1 id="appname"  @click.prevent="home">QuizUp</h1>
+        <h1 id="appname"  @click.prevent="home">Quizdom</h1>
         <not-button></not-button>
       </div>
       <not-tab v-if="logged"></not-tab>

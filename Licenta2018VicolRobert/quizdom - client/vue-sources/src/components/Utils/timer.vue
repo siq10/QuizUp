@@ -29,7 +29,7 @@
         default:false
       },
       color:{
-        default:"blue"
+        default:"white"
       },
     },
     watch:{
@@ -104,6 +104,8 @@
     }
   }
 </script>
-<style>
-
+<style scoped>
+p {
+  margin-bottom:0
+}
 </style>

@@ -1,6 +1,6 @@
 <template>
   <div id="app">
-    <transition>
+    <transition name="faderelative">
     <div class="gameon"  v-if="gameon">
       <div class="gcontainer">
         <transition name="faderelative" mode="out-in">
@@ -57,23 +57,27 @@
 
       <div class="gamewindow" v-if="status=='inProgress'">
         <div class="p1">
-          <img class="round brd1" width="60" height="60" :src="$publicurl + user.imgpath">
+          <img class="brd1" :class="[w>700 ? user.imgclass :'round',{ 'shinegreen1':correct1==1},{ 'shinered1':correct1==-1}]" :width="w>700 ? 1.5*user.imgwidth : 60" :height="w>700? 1.5*user.imgheight : 60" :src="$publicurl + user.imgpath">
+          <div class="infouser">
           <p class="wrp">{{user.name}}</p>
-          <p>{{score1}}</p>
+          <p :style="{color:effect1}">{{score1}}</p>
 
-          <timer :color="answered==-1?'white':barcolor1"  @timeleft="getTime(1,$event)" :time="20" :interval="100" :stop="stop1">
+          <timer ref="timer1"  @timeleft="getTime(1,$event)" :time="timer1" :interval="100" :stop="stop1">
           </timer>
+          </div>
         </div>
         <div class="titleq">
           <p>Question</p>
           <p>{{qcount}}</p>
         </div>
         <div class="p2">
-          <img class="round brd2" width="60" height="60" :src="$publicurl + opponent.imgpath">
-          <p class="wrp">{{opponent.name}}</p>
-          <p>{{score2}}</p>
-          <timer @timeleft="getTime(2,$event)" :time="20" :interval="100" :stop="stop2">
+          <img class="brd2" :class="[w>700 ? opponent.imgclass :'round', { 'shinegreen2':correct2==1},{ 'shinered2':correct2==-1}]" :width="w>700 ? 1.5*opponent.imgwidth : 60" :height="w>700? 1.5*opponent.imgheight : 60" :src="$publicurl + opponent.imgpath">
+          <div class="infouser">
+            <p class="wrp">{{opponent.name}}</p>
+          <p :style="{color:effect2}">{{score2}}</p>
+          <timer  ref="timer2" @timeleft="getTime(2,$event)" :time="timer2" :interval="100" :stop="stop2">
           </timer>
+          </div>
         </div>
         <div class="problems" v-for="i in ids" v-if="i==qcount-1">
           <div class="questioncontainer">
@@ -81,21 +85,32 @@
           </div>
           <div class="answercontainer">
             <div class="barcontainer b1"></div>
-            <animate-bar uid="1" class="bar1" width="5" :height="wid1" :color="barcolor1" time="timeBetweenFrames"  animateDimension="height" endValue="0" ></animate-bar>
+            <animate-bar ref="bar1" uid="1" class="bar1" width="5" :height="wid1" :color="barcolor1" time="timeBetweenFrames"  animateDimension="height" endValue="0" ></animate-bar>
             <div class="barcontainer b2"></div>
 
             <div class="answers1" :class="{green:(correct1==1 && answered==order),red:(correct1==-1 && answered==order)}" v-for="(a,order) in answers[qcount-1]" @click.prevent="solve(order)">
-              <h4 class="">{{String.fromCharCode(ch.charCodeAt() + parseInt(order+1)) + ". " + a}}</h4>
+              <h4 class="">{{ String.fromCharCode(ch.charCodeAt() + parseInt(order+1)) + ". " + a}}</h4>
             </div>
 
             <div  class="barcontainer b3"></div>
-            <animate-bar uid="2" class="bar2" width="5" :height="wid2" :color="barcolor2" time="timeBetweenFrames"  animateDimension="height" endValue="0" ></animate-bar>
+            <animate-bar ref="bar2" uid="2" class="bar2" width="5" :height="wid2" :color="barcolor2" time="timeBetweenFrames"  animateDimension="height" endValue="0" ></animate-bar>
             <div  class="barcontainer b4"></div>
 
           </div>
 
         </div>
 
+      </div>
+      <div class="result" v-if="status=='end' && winner==1">
+        <p>Winner is :</p>
+        <h3>{{user.name}}</h3>
+        <p>with</p>
+        <h3>{{score1}} points!</h3>       </div>
+      <div class="result" v-if="status=='end' && winner==2">
+        <p>Winner is :</p>
+        <h3>{{opponent.name}}</h3>
+        <p>with</p>
+        <h3>{{score2}} points!</h3>
       </div>
     </div>
     </transition>
@@ -120,6 +135,7 @@
     data () {
       return {
         opponent:"",
+        winner:0,
           user:{},
           received:0,
           trigger1:0,
@@ -131,7 +147,7 @@
           problems:[],
         score1:0,
         score2:0,
-        status:"",
+        status:"popup",
         qcount:1,
         response:[],
         ids:[],
@@ -151,8 +167,12 @@
         timeBetweenFrames:20000/300,
 
         barcolor1:"darkorange",
-        barcolor2:"darkorange"
-
+        barcolor2:"darkorange",
+        effect1:"white",
+        effect2:"white",
+        timer1:20,
+        timer2:20,
+        time:0
       }
     },
     computed:{
@@ -197,16 +217,21 @@
       },
       gameon()
       {
-        setTimeout(()=>{
-          this.trigger1 = 1
-        },1000)
-        setTimeout(()=>{
-          this.trigger2 = 1
-        },1500)
+        if(this.gameon == 1)
+        {
+          setTimeout(()=>{
+            this.trigger1 = 1
+          },1000)
+          setTimeout(()=>{
+            this.trigger2 = 1
+          },1500)
+        }
+
       }
     },
     methods: {
       readyGame(){
+        var self =this
         Vue.http.put(this.$apiurl + 'game/accept').then((response) => {
           if(response.status === 202)
           {
@@ -219,7 +244,62 @@
               console.log(response)
               setTimeout(()=>{
                 this.status = "inProgress"
+                this.setI1 = setInterval(function(){
+                  self.wid1-=1
+//              console.log(self.wid)
+                  if(self.wid1 <=0)
+                  {
+                    clearInterval(self.setI1)
+                  }
+                },self.timeBetweenFrames)
+
+                this.setI2 = setInterval(function(){
+                  self.wid2-=1
+//              console.log(self.wid)
+                  if(self.wid2<=0)
+                  {
+                    clearInterval(self.setI2)
+                  }
+                },self.timeBetweenFrames)
               },1500)
+
+
+
+
+              this.problems = response.body.problems
+              this.qcount = 1
+              console.log(this.problems)
+
+              //console.log(this.response)
+
+              for(var i = 0 ; i<this.problems.length;i++)
+              {
+                this.ids.push(i)
+              }
+//            this.shuffleArray(this.ids)
+              for(var j=0;j<this.ids.length;j++)
+              {
+                this.answers[j]= []
+                if(this.problems[this.ids[j]].t1)
+                  this.answers[j].push(this.problems[this.ids[j]].t1)
+                if(this.problems[this.ids[j]].t2)
+                  this.answers[j].push(this.problems[this.ids[j]].t2)
+                if(this.problems[this.ids[j]].t3)
+                  this.answers[j].push(this.problems[this.ids[j]].t3)
+                this.answers[j].push(this.problems[this.ids[j]].ta)
+                this.shuffleArray(this.answers[j])
+              }
+
+
+
+
+
+
+
+
+
+
+
             }
         })
       },
@@ -260,17 +340,40 @@
         if(id==1)
         {
           this.seconds1 = value.seconds
+          if(this.correct1 == 1)
+          {
+            this.score1 += this.seconds1 * 5
+          }
         }
         else
           if(id==2)
           {
             this.seconds2 = value.seconds
           }
-        console.log(this.seconds1)
-        if(this.correct1 == 1)
-        {
-          this.score1 += this.seconds1 * 5
-        }
+
+      },
+      showWinner(player)
+      {
+        this.received=1
+        this.winner = player
+        this.status = "end"
+        this.$store.dispatch("updateMatchData",{})
+
+        setTimeout(()=>{
+
+          this.$store.dispatch("showGameOn",0)
+
+          this.trigger1=0
+            this.trigger2=0
+            this.accepted1=0
+            this.accepted2=0
+            this.canceled1=0
+            this.canceled2=0
+            this.status="";
+            this.received=0
+
+          },6000
+        )
       },
       solve(order)
       {
@@ -283,17 +386,73 @@
         {
           this.correct1 = 1
           this.barcolor1 = "green"
+          this.effect1 = "green"
         }
         else
         {
           this.barcolor1 = "red"
+          this.effect1 = "red"
           this.correct1 = -1
         }
+        setTimeout(()=>
+        {
+          Vue.http.put(this.$apiurl + 'game/answer',{"right":this.correct1,"time":this.seconds1,"score":this.score1,"id":this.opponent.id,"problem":order}).then((payload) => {
+            if(this.correct1 && this.correct2)
+            {
+              //Ambii au raspuns la intrebare => aducem variabilele la starea initiala
+                Vue.http.put(this.$apiurl + 'game/next',{"id":this.opponent.id}).then((payload) => {
+                  setTimeout(()=> {
+                    if(payload.data.end)
+                    {
+                      this.showWinner(payload.data.end.winner)
+                      return
+                    }
+                      this.qcount = payload.data.pbnumber.value + 1
+                  this.correct1 = 0
+                  this.barcolor1 = "darkorange"
+                  this.effect1 = "white"
+                  this.correct2 = 0
+                  this.barcolor2 = "darkorange"
+                  this.effect2 = "white"
+
+                    this.answered = -1
+                  this.wid1 = 300
+                    this.wid2 = 300
+//                  this.$refs.bar1.init()
+//                    this.$refs.bar2.init()
+                    this.timer1 = 20
+                    this.timer2 = 20
+                    this.stop1 = false
+                    this.stop2 = false
+                    var self = this
+                    this.setI1 = setInterval(function(){
+                      self.wid1-=1
+//              console.log(self.wid)
+                      if(self.wid1 <=0)
+                      {
+                        clearInterval(self.setI1)
+                      }
+                    },self.timeBetweenFrames)
+
+                    this.setI2 = setInterval(function(){
+                      self.wid2-=1
+//              console.log(self.wid)
+                      if(self.wid2<=0)
+                      {
+                        clearInterval(self.setI2)
+                      }
+                    },self.timeBetweenFrames)
+                  },3000)
+                })
+            }
+          })
+          console.log(order)
+          console.log(this.seconds1)
+        },75)
 //        console.log(this.problems[this.ids[this.qcount-1]].ta)
 //        console.log(this.answers[this.qcount-1][order])
 
-        console.log(order)
-        console.log(this.seconds1)
+
       }
 
     },
@@ -327,9 +486,12 @@
 
           if(payload.body.status === "inProgress")
           {
+            this.score1 = payload.body.score1
+            this.score2 = payload.body.score2
 
             this.problems = payload.body.problems
             this.status = "inProgress"
+            this.qcount = payload.body.pbnumber + 1
             console.log(this.problems)
 
             //console.log(this.response)
@@ -381,6 +543,115 @@
           .listen('GameInProgress',(payload) => {
             console.log("pushed:")
             console.log(payload)
+
+            if(payload.data.problems)
+            {
+
+              this.problems = payload.data.problems
+              this.qcount = 1
+              console.log(this.problems)
+
+              //console.log(this.response)
+
+              for(var i = 0 ; i<this.problems.length;i++)
+              {
+                this.ids.push(i)
+              }
+//            this.shuffleArray(this.ids)
+              for(var j=0;j<this.ids.length;j++)
+              {
+                this.answers[j]= []
+                if(this.problems[this.ids[j]].t1)
+                  this.answers[j].push(this.problems[this.ids[j]].t1)
+                if(this.problems[this.ids[j]].t2)
+                  this.answers[j].push(this.problems[this.ids[j]].t2)
+                if(this.problems[this.ids[j]].t3)
+                  this.answers[j].push(this.problems[this.ids[j]].t3)
+                this.answers[j].push(this.problems[this.ids[j]].ta)
+                this.shuffleArray(this.answers[j])
+              }
+
+            }
+            if(payload.data.right == 1)
+            {
+              self.score2 = payload.data.score
+              clearInterval(self.setI2)
+              self.stop2 = true
+              self.effect2 = "green"
+              self.correct2 = 1
+              self.barcolor2 = "green"
+              self.seconds2 = payload.data.time
+              self.$refs.timer2.count = payload.data.time*1000
+            }
+            else
+              if(payload.data.right==-1)
+            {
+              self.score2 = payload.data.score
+              clearInterval(self.setI2)
+              self.stop2 = true
+              self.esconds2 = payload.data.time
+              self.$refs.timer2.count = payload.data.time*1000
+              self.correct2 = -1
+              self.effect2 = 'red'
+              self.barcolor2 = "red"
+            }
+            else
+              if(payload.data.value)
+              {
+                setTimeout(() => {
+                  self.qcount = payload.data.value + 1
+                  self.correct1 = 0
+                  self.barcolor1 = "darkorange"
+                  self.effect1 = "white"
+                  self.correct2 = 0
+                  self.barcolor2 = "darkorange"
+                  self.effect2 = "white"
+                  self.answered = -1
+                  self.wid1 = 300
+                  self.wid2 = 300
+
+
+                  this.answered = -1
+                  this.wid1 = 300
+                  this.wid2 = 300
+//                  console.log(this.$refs.bar1)
+//                  this.$refs.bar1[0].init()
+//                  this.$refs.bar2[0].init()
+                  this.timer1 = 20
+                  this.timer2 = 20
+                  this.stop1 = false
+                  this.stop2 = false
+                  this.setI1 = setInterval(function(){
+                    self.wid1-=1
+//              console.log(self.wid)
+                    if(self.wid1 <=0)
+                    {
+                      clearInterval(self.setI1)
+                    }
+                  },self.timeBetweenFrames)
+
+                  this.setI2 = setInterval(function(){
+                    self.wid2-=1
+//              console.log(self.wid)
+                    if(self.wid2<=0)
+                    {
+                      clearInterval(self.setI2)
+                    }
+                  },self.timeBetweenFrames)
+
+
+                },3000)
+
+              }
+              else
+                if(payload.data.end)
+                {
+                  setTimeout(()=>{
+                    this.showWinner(3 - payload.data.winner)
+                  },3000)
+//                  console.log("----------" + payload.data.winner)
+                }
+//            self.timer2 = payload.timer2
           })
         Echo.channel('notify.'+ this.$store.state.isAuthenticated)
           .listen('RespondToGameInvitation',(payload) => {
@@ -397,6 +668,7 @@
             else
               if(payload.accepted===0 && self.received==0)
               {
+//                self.received = 1
                 self.user.id = payload.data.userid2
                 self.user.name = payload.data.username2
                 self.user.imgpath = payload.data.userimg2
@@ -439,6 +711,13 @@
               {
 
                 self.accepted2 = 1
+                if(self.accepted1==1)
+                {
+
+                  setTimeout(()=>{
+                    self.status = "inProgress"
+                  },1500)
+                }
               }
 //            this.$store.dispatch("addNotification",payload)
 //            this.notificationsCount+=1
@@ -449,6 +728,35 @@
 </script>
 
 <style lang="scss" rel="stylesheet/scss" scoped>
+  .shinered1{
+    -moz-box-shadow:    15px 0 20px indianred!important;
+    -webkit-box-shadow: 15px 0 20px indianred!important;
+    box-shadow:         15px 0 20px indianred!important;
+  }
+  .shinegreen1{
+    -moz-box-shadow:    15px 0 20px darkgreen!important;
+    -webkit-box-shadow: 15px 0 20px darkgreen!important;
+    box-shadow:         15px 0 20px darkgreen!important;
+  }
+
+  .shinered2{
+    -moz-box-shadow:    -15px 0 20px indianred!important;
+    -webkit-box-shadow: -15px 0 20px indianred!important;
+    box-shadow:         -15px 0 20px indianred!important;
+  }
+  .shinegreen2{
+    -moz-box-shadow:    -15px 0 20px darkgreen!important;
+    -webkit-box-shadow: -15px 0 20px darkgreen!important;
+    box-shadow:         -15px 0 20px darkgreen!important;
+  }
+  .faderelative-enter-active, .faderelative-leave-active {
+    transition: opacity .5s;
+    width: 100%;
+  }
+  .faderelative-enter, .faderelative-leave-to{
+    opacity: 0
+  }
+
   .gameready{
     width:100vw;
     height:100vh;
@@ -463,10 +771,15 @@
     -moz-box-shadow:    5px 0 20px #fff;
     -webkit-box-shadow: 5px 0 20px #fff;
     box-shadow:         5px 0 20px #fff;
-
+    -webkit-border-radius: 10px;
+    -moz-border-radius: 10px;
+    border-radius: 10px;
   }
   .brd2{
     /*border:2px solid white;*/
+    -webkit-border-radius: 10px;
+    -moz-border-radius: 10px;
+    border-radius: 10px;
     -moz-box-shadow:    -5px 0 20px #fff;
     -webkit-box-shadow: -5px 0 20px #fff;
     box-shadow:         -5px 0 20px #fff;
@@ -745,46 +1058,233 @@
 
   }
 
-  .p1,.p2{
-    width:90px;
-    text-align:center;
-    display:inline-block;
-    font-weight:bold;
-    font-variant:small-caps;
-  }
   .p1 p,.p2 p, .titleq p{
     margin: 0;
     padding:0;
   }
-  .p1{
+  @media only screen and (min-width: 700px) {
+    .result{
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      margin:0 auto;
+      margin-top:20%;
+      width:70%;
+      background:black;
+      border-radius:10px;
+      color:white!important;
+    }
+
+    .question1{
+      text-align:center;
+      font-size:20px;
+      max-width: 80%;
+      margin:20px auto;
+    }
+
+    .answercontainer .answers1{
+      margin-left: 40px;
+      cursor:pointer;
+      width:92%;
+      padding:20px 0 20px 5%;
+      position:relative;
+    }
+    .answers1::before{
+      content: '';
+      position:absolute;
+      width:90%;
+      height:2px;
+      border-radius:2px;
+      margin-left:auto;
+      margin-right:auto;
+      left: 0;
+      right:0;
+      bottom:0;
+      transform:scale(0);
+      transition:all 0.5s ease;
+      background: white;
+    }
+
+    .answers1:hover::before{
+      transform:scale(1);
+    }
+
+
+    .answercontainer .answers1:hover{
+      background: rgba(210,210,210,0.2);
+
+    }
+
+    .answercontainer {
+      position: relative;
+      padding-bottom:20px;
+    }
+      .bar1{
+        position:absolute;
+        left: 5px;
+        top:-60px;
+      }
+      .bar2{
+        position: absolute;
+        right:5px;
+        top: -60px;
+      }
+
+      .barcontainer{
+        position:absolute;
+        width:2px;
+        top:-60px;
+        background: white;
+        height: 300px;
+      }
+      .b1{
+        left:3px;
+      }
+      .b2{
+        left:10px;
+      }
+      .b3{
+        right:10px;
+      }
+      .b4{
+        right:3px;
+      }
+
+      .b1::after,.b3::after{
+        content:"";
+        position: absolute;
+        top:-2px;
+        width:9px;
+        height:4px;
+        background:white;
+      }
+    .problems{
+      width:calc(100% - 60px);
+      border-radius:10px;
+      background-color:black;
+      position:absolute;
+      top:200px;
+      margin-left: auto;
+      margin-right: auto;
+      left: 0;
+      right: 0;
+    }
+    .titleq{
+      position:absolute;
+      margin-left: auto;
+      margin-right: auto;
+      left: 0;
+      right: 0;
+      text-align:center;
+      font-weight:bold;
+      font-variant:small-caps;
+      margin-top:1rem;
+    }
+    .titleq p:first-child{
+      font-size:50px;
+
+    }
+    .titleq p:nth-child(2){
+      font-size:70px;
+    }
+
+    .p1,.p2{
+      min-width:250px;
+      max-width:500px;
+      margin:2rem;
+      text-align:center;
+      font-size:50px;
+      display:flex;
+      font-weight:bold;
+      font-variant:small-caps;
+      border:3px solid black;
+      border-radius:10px;
+      background: black;
+    }
+    .p1 p,.p2 p{
+      text-align:initial;
+      font-size:15px;
+    }
+    .p1 p:first-child::before, .p2 p:first-child::before {
+      content: "Name: \00a0";
+    }
+    .p1 p:nth-child(2)::before, .p2 p:nth-child(2)::before {
+      content:"Total Score: \00a0";
+    }
+    .p1 .infouser{
+      margin-right:10px;
+    }
+    .p2 .infouser{
+      margin-left:10px;
+    }
+    .brd1 , .brd2 {
+      margin:15px 20px 15px 20px;
+
+    }
+    .p1 {
+      position:absolute;
+      left:0;
+      top:0;
+
+
+    }
+    .p2 {
+      position:absolute;
+      right:0;
+      top:0;
+
+      flex-direction: row-reverse;
+    }
+
+    .infouser{
+      vertical-align: top;
+      margin-top:12px;
+    }
+    .green{
+      background:darkgreen!important;
+    }
+    .red{
+      background:indianred!important;
+    }
   }
-  .p2{
-  }
+  //-------------------------------------------------------------------------------
   .wrp{
     overflow: hidden;
   }
-  .titleq{
-    width:calc(98vw - 190px);
-    text-align:center;
-    display:inline-block;
-    font-weight:bold;
-    font-variant:small-caps;
-  }
-  .titleq p:first-child{
-    font-size:30px;
 
-  }
-  .titleq p:nth-child(2){
-    font-size:60px;
-  }
-  .green{
-    background:green!important;
-  }
-  .red{
-    background:red!important;
-  }
+
+  //-------------------------------------------------------------------------------
 
   @media only screen and (max-width: 700px) {
+    .green{
+      background:green!important;
+    }
+    .red{
+      background:red!important;
+    }
+    .p1,.p2{
+      width:90px;
+      text-align:center;
+      display:inline-block;
+      font-weight:bold;
+      font-variant:small-caps;
+
+    }
+    .titleq{
+      width:calc(98vw - 190px);
+      text-align:center;
+      display:inline-block;
+      font-weight:bold;
+      font-variant:small-caps;
+    }
+    .titleq p:first-child{
+      font-size:30px;
+
+    }
+    .titleq p:nth-child(2){
+      font-size:60px;
+    }
     .backsquare{
       -moz-box-shadow:    inset 0 0 400px #000000;
       -webkit-box-shadow: inset 0 0 400px #000000;
@@ -814,7 +1314,12 @@
       -webkit-box-shadow: inset 0 0 400px #000000;
       box-shadow:         inset 0 0 400px #000000;
     }
-
+    .result{
+      font-weight:800;
+      font-size:18px;
+      margin-top:20%;
+      text-align:center;
+    }
 
     .gamewindow{
       margin:10px 1vw
@@ -824,7 +1329,6 @@
       display: flex;
       align-items: center;
       margin:0 auto;
-      padding:0;
       justify-content: center;
       width:80vw;
       height: 4rem;
@@ -834,10 +1338,13 @@
       border-radius:10px;
       color:black;
       margin-top:10px;
+      padding-top:4px;
+      /*padding-bottom:25px;*/
+      /*padding-top:15px;*/
     }
     .answers1 h4{
       margin: 0;
-      padding: 0;
+      padding:5px 5px 5px 5px;
       -ms-word-break:normal;
       word-break: normal;
     }

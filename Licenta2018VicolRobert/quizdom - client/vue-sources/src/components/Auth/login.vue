@@ -9,7 +9,6 @@
       <input type="password" v-model="guest.password" id="password">
       <br>
       <button id="loginbutton"  :disabled="allowed === 0" @click.prevent="loginUser">Sign in</button>
-      <p>{{guest}}</p>
     </form>
 
     <div class="form-error" v-if="error">Error logging in</div>

@@ -9,6 +9,7 @@
       <input type="password" v-model="newUser.password" id="password">
       <label for="email">Email:</label>
       <input type="email" v-model="newUser.email" id="email">
+      <br>
       <button @click.prevent="createUser">Create</button>
     </form>
 
@@ -35,6 +36,7 @@
           this.error = false
           this.$router.push({path: '/welcome'})
         }, (error) => {
+          console.log(error)
           this.error = true
         })
       }
@@ -48,5 +50,8 @@
     #create-user{
       color:black;
     }
+  }
+  label{
+    color: black!important;
   }
 </style>

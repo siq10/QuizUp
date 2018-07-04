@@ -183,7 +183,12 @@
   }
   .notifications{
     padding:2rem;
+
     margin:0;
+
+    padding:10px 0 10px 0;
+    border-bottom:3px solid white;
+    border-radius:20px;
     transition:opacity 0.4s ease,
               transform 0.3s ease,
               max-height 0.3s ease,
@@ -217,8 +222,9 @@
     .notifications
     {
       margin:0;
-      padding:0;
-      margin-bottom:20px;
+      padding:15px 0 15px 0;
+      border-bottom:3px solid white;
+      border-radius:15px;
       font-size:20px;
     }
     .notificationcontainer{
@@ -228,6 +234,9 @@
     }
     .time{
       margin-left:0;
+    }
+    .time::before{
+      content:"\00000a"
     }
   }
 </style>
